@@ -1,6 +1,4 @@
 classdef SPARAMS < handle
-    % Author: Nathan Chordas-Ewell
-    % Written: 2020
     %Works on up to 4 port measurements in RI, MA, dBA formats (Som
     %Usage:
     % s = SPARAMS('filename')
@@ -32,6 +30,10 @@ classdef SPARAMS < handle
     %Deembed S parameters to the DUT. Returns an SPARAMS object of the DUT
     % P1 <--err1--DUT--err2--> P2
     % DUT = SPARAMS.deembed(err1, measured, err2)
+    %Write data to new touchstone file
+    % s.writeSNP(filename)
+    % File format is already taken care of, but s.serNumPorts() must be
+    % called first to know which file type to write (s1p, s2p, s3p, s4p)
 
     properties
         f;
@@ -59,6 +61,9 @@ classdef SPARAMS < handle
         function setFile(obj, fname)
             %If you wish to set a filename after creating the object. Also
             %called when initializing with a sNp file.
+            if isstring(fname)
+                fname = convertStringsToChars(fname);
+            end
             obj.filename = fname;
             obj.txt2data();
             obj.getFormat();
@@ -117,7 +122,9 @@ classdef SPARAMS < handle
 			obj.numPorts = str2num(fExt(3));
             txt = fileread(obj.filename);
             key = '#';
-            
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            txt = strtrim(txt);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             txt = regexprep(txt, '![\s\S]*?!|([^:]|^)!.*$', '', 'lineanchors', 'dotexceptnewline');
 			txt = regexprep(txt, '\t+', ' '); %Remove all tabs and replace with s single space (dealt with in next line)
             txt = strtrim(txt);	%Remove trailing whitespace
@@ -259,7 +266,7 @@ classdef SPARAMS < handle
             [~, ind] = min(abs(obj.f-freq));
 			fAct = obj.f(ind);
             if obj.f(ind) ~= freq
-                warning('Not a frequency in list, using %d', obj.f(ind));
+                warning('Not a frequency in list, using %d GHz instead of the specified %d GHz', obj.f(ind)/1e9, freq/1e9);
             end
             switch obj.numPorts
                 case 1
@@ -333,7 +340,7 @@ classdef SPARAMS < handle
         end
 
         function plotdB(obj, splt)
-            %Plots any speciified S-parameter(s) in dB format
+            %Plots any speciified S-parameter(s) in dB formatboi
             %Say you wish to plot only S11 and S21
             %s.plotdB({'S11' 'S21'})
             hold on
@@ -451,7 +458,7 @@ classdef SPARAMS < handle
 			Zin2 = obj.Z0.*(1 + obj.S22)./(1 - obj.S22);
 		end
 
-		function [A, B, C, D] = toABCD(obj, freq)
+		function [A, B, C, D] = toABCDparams(obj, freq)
             %Calculates the ABCD parameters from S-parameters
             %[A, B, C, D] = s.toABCD(); for all frequencies (s.f)
             %[A, B, C, D] = s.toABCD(freq); for a specified frequency
@@ -513,25 +520,25 @@ classdef SPARAMS < handle
 				case 1
 					obj.S11 = S11n;
 				case 2
-					obj.S11 = S11n; obj.S12 = S12n; obj.S21 = S21n; obj.S22 = S22n; 
+					obj.S11 = S11n'; obj.S12 = S12n'; obj.S21 = S21n'; obj.S22 = S22n'; 
             end
             obj.setZ0(Z0new);
 		end
 		
-		function [Z11, Z12, Z21, Z22] = toZparams(obj, freq)
+		function [Z11, Z12, Z21, Z22] = toZparams(obj)
             %Calculate Z parameters from S-parameters
             %[Z11, Z12, Z21, Z22] = toZparams(); for all frequencies (s.f)
             %[Z11, Z12, Z21, Z22] = toZparams(freq); for a specified frequency
 			if obj.numPorts ~= 2
 				warning('Only for 2 port measurements');
 			end
-			switch nargin
-				case 2
-					fS11 = obj.S11; fS12 = obj.S12; fS21 = obj.S21; fS22 = obj.S22;
-				case 3
-					S = obj.toMat(freq);
-					fS11 = S(1, 1); fS12 = S(1, 2); fS21 = S(2, 1); fS22 = S(2, 2);
-			end
+% 			switch nargin
+% 				case 2
+			fS11 = obj.S11; fS12 = obj.S12; fS21 = obj.S21; fS22 = obj.S22;
+% 				case 3
+% 					S = obj.toMat(freq);
+% 					fS11 = S(1, 1); fS12 = S(1, 2); fS21 = S(2, 1); fS22 = S(2, 2);
+% 			end
 			Z11 = obj.Z0*((1 + fS11).*(1 - fS22) + fS12.*fS21)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
 			Z12 = obj.Z0*(2.*fS12)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
 			Z21 = obj.Z0*(2*fS21)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
@@ -545,13 +552,14 @@ classdef SPARAMS < handle
             if obj.numPorts ~= 2
 				warning('Only for 2 port measurements');
             end
-            switch nargin
-				case 2
-					fS11 = obj.S11; fS12 = obj.S12; fS21 = obj.S21; fS22 = obj.S22;
-				case 3
-					S = obj.toMat(freq);
-					fS11 = S(1, 1); fS12 = S(1, 2); fS21 = S(2, 1); fS22 = S(2, 2);
-            end
+            fS11 = obj.S11; fS12 = obj.S12; fS21 = obj.S21; fS22 = obj.S22;
+%             switch nargin
+% 				case 2
+% 					fS11 = obj.S11; fS12 = obj.S12; fS21 = obj.S21; fS22 = obj.S22;
+% 				case 3
+% 					S = obj.toMat(freq);
+% 					fS11 = S(1, 1); fS12 = S(1, 2); fS21 = S(2, 1); fS22 = S(2, 2);
+%             end
             delS = (1 + fS11).*(1 + fS22) - fS12.*fS21;
             Y11 = ((1 - fS11).*(1 + fS22) + fS12.*fS21)./delS./obj.Z0;
             Y12 = -2.*fS12./delS./obj.Z0;
@@ -574,12 +582,49 @@ classdef SPARAMS < handle
 			end
         end
         
-        %Work in progress
-%         function writeSNP(obj, filenameOut)
-%             fileExt = ['.s' num2str(obj.numPorts), 'p'];
-%             
-% 			dlmwrite(filenameOut, obj.data, ' ');
-%         end
+            % Work in progress
+        function writeSNP(obj, filenameOut)
+            fileExt = ['.s' num2str(obj.numPorts), 'p'];
+            headerStr = ['# GHZ S RI R ', num2str(obj.Z0)];
+            % headerStr = "asfsafsadf"
+            switch obj.numPorts
+                case 1
+                    S11re = real(obj.S11);S11im = imag(obj.S11);
+                    dataWrite = table(obj.f'/1e9, S11re', S11im');
+                    dataWrite.Properties.VariableNames = [headerStr, " ", "  "];
+                    writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
+                case 2
+                    dataWrite = table(obj.f'/1e9, real(obj.S11)', imag(obj.S11)', real(obj.S21)',imag(obj.S21)',real(obj.S12)',imag(obj.S12)',real(obj.S22)',imag(obj.S22)');
+                    names = headerStr;
+                    for i = 1:8
+                        names = [names convertCharsToStrings(blanks(i))];
+                    end
+                    dataWrite.Properties.VariableNames = names;%[headerStr, " ", "  ", "   ", "    ", "     ", "      ", "       ", "        "];
+                    writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
+                case 3
+                    dataWrite = table(obj.f'/1e9, real(obj.S11)', imag(obj.S11)', real(obj.S12)',imag(obj.S12)', real(obj.S13)', imag(obj.S13)',...
+                        real(obj.S21)', imag(obj.S21)', real(obj.S22)',imag(obj.S22)', real(obj.S23)', imag(obj.S23)',...
+                        real(obj.S31)', imag(obj.S31)', real(obj.S32)',imag(obj.S32)', real(obj.S33)', imag(obj.S33)');
+                    names = headerStr;
+                    for i = 1:18
+                        names = [names convertCharsToStrings(blanks(i))];
+                    end
+                    dataWrite.Properties.VariableNames = names;
+                    writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
+                case 4
+                    dataWrite = table(obj.f'/1e9, real(obj.S11)', imag(obj.S11)', real(obj.S12)',imag(obj.S12)', real(obj.S13)', imag(obj.S13)', real(obj.S14)', imag(obj.S14)',...
+                        real(obj.S21)', imag(obj.S21)', real(obj.S22)',imag(obj.S22)', real(obj.S23)', imag(obj.S23)', real(obj.S24)', imag(obj.S24)',...
+                        real(obj.S31)', imag(obj.S31)', real(obj.S32)',imag(obj.S32)', real(obj.S33)', imag(obj.S33)', real(obj.S34)', imag(obj.S34)',...
+                        real(obj.S31)', imag(obj.S31)', real(obj.S32)',imag(obj.S32)', real(obj.S33)', imag(obj.S33)', real(obj.S34)', imag(obj.S34)');
+                    names = headerStr;
+                    for i = 1:32
+                        names = [names convertCharsToStrings(blanks(i))];
+                    end
+                    dataWrite.Properties.VariableNames = names;
+                    writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
+            end
+			% dlmwrite(filenameOut, obj.data, ' ');
+        end
         
         function cascade(obj, N)
             %Calculates S parameters when cascaded N times. Only valid for
@@ -587,7 +632,7 @@ classdef SPARAMS < handle
             %This function will overwrite the original S-parameters, so it
             %may be advisable to copy the original unit cell first using
             %copyobj()
-                [Au, Bu, Cu, Du] = obj.toABCD;
+                [Au, Bu, Cu, Du] = obj.toABCDparams;
                 At = Au; Bt = Bu; Ct = Cu; Dt = Du;
                 for i = 1:N-1
                     Attemp = At; Bttemp = Bt; Cttemp = Ct; Dttemp = Dt;
@@ -609,16 +654,16 @@ classdef SPARAMS < handle
            %Beta_p = acos((1 - S(1,1)*S(2,2) + S(1,2)*S(2,1))/(2*S(2,1)))
            switch nargin
                case 1
-                    plot(Beta_p, obj.f/obj.freqScale{1}, 'k');
-                    ylabel(['f (' obj.freqScale{2} ')'])
-                    xlabel('\beta p (deg)')
+                    plot(obj.f/obj.freqScale{1}, Beta_p, 'k');
+                    ylabel('\beta p (deg)')
+                    xlabel(['f (' obj.freqScale{2} ')'])
                case 2
                    if ~strcmpi(flip, 'flip')
-                       plot(Beta_p, obj.f/obj.freqScale{1}, 'k');
+                       plot(obj.f/obj.freqScale{1}, Beta_p, 'k');
                        ylabel(['f (' obj.freqScale{2} ')'])
                        xlabel('\beta p (deg)')
                    else
-                       plot(obj.f/obj.freqScale{1}, Beta_p, 'k');
+                       plot(Beta_p, obj.f/obj.freqScale{1}, 'k');
                        xlabel(['f (' obj.freqScale{2} ')'])
                        ylabel('\beta p (deg)')
                    end
@@ -682,14 +727,14 @@ classdef SPARAMS < handle
             for i = 1:length(splt1)
                 stringToPlot = ['ob1.' splt1{i}];
                 stoPlot = eval(stringToPlot);
-                plot(ob1.f, 20*log10(abs(stoPlot)));
+                plot(ob1.f/1e9, 20*log10(abs(stoPlot)));
             end
             for i = 1:length(splt2)
                 stringToPlot = ['ob2.' splt2{i}];
                 stoPlot = eval(stringToPlot);
-                plot(ob2.f, 20*log10(abs(stoPlot)));
+                plot(ob2.f/1e9, 20*log10(abs(stoPlot)));
             end
-            xlabel('f (Hz)');
+            xlabel('f (GHz)');
             ylabel('S-parameters (dB)');
         end
 
@@ -712,6 +757,22 @@ classdef SPARAMS < handle
 			S21 = 2*Z21.*Z0./dZ;
 			S22 = ((Z11 + Z0).*(Z22 - Z0) - Z12.*Z21)/dZ;s
 			S = [S11 S12;S21 S22];
-		end
+        end
+        
+        function [A, B, C, D] = s2abcd(S, Z0)
+			A = ((1 + S(1,1)).*(1 - S(2,2)) + S(1,2).*S(2,1))./(2.*S(2,1));
+			B = Z0*((1 + S(1,1)).*(1 + S(2,2)) - S(1,2).*S(2,1))./(2.*S(2,1));
+			C = (1/Z0)*((1 - S(1,1)).*(1 - S(2,2)) - S(1,2).*S(2,1))./(2*S(2,1));
+			D = ((1 - S(1,1)).*(1 + S(2,2)) + S(1,2).*S(2,1))./(2*S(2,1));
+        end
+        
+        function [S11, S21, S12, S22] = abcd2s(A, B, C, D, Z0)
+            denom = A + B./Z0 + C.*Z0 + D;
+            S11 = (A + B./Z0 - C.*Z0 - D)./denom;
+            S12 = 2.*(A.*D - B.*C)./denom;
+            S21 = 2./denom;
+            S22 = (-A + B./Z0 - C.*Z0 + D)./denom;
+        end
+        
     end
 end
