@@ -582,19 +582,35 @@ classdef SPARAMS < handle
 			end
         end
         
-            % Work in progress
         function writeSNP(obj, filenameOut)
+            % Wtites a touchstone file with the specified file name. Format
+            % is in re/im and the frequency units are GHz. The file name
+            % should not include the extension
+            for p = properties(obj).'
+                try % Convert all vectors to column vectors if not already
+                   if numel(obj.(p{1})) > 1 & isrow(obj.(p{1}))
+                       obj.(p{1}) = obj.(p{1})';
+                   end
+                catch
+                    warning('Failed to transpose property: %s', p);
+                end
+            end
             fileExt = ['.s' num2str(obj.numPorts), 'p'];
             headerStr = ['# GHZ S RI R ', num2str(obj.Z0)];
-            % headerStr = "asfsafsadf"
             switch obj.numPorts
                 case 1
+                    disp('Writing s1p file...')
+                    if isrow(obj.S11)
+                        obj.S11 = obj.S11';
+                        obj.f = obj.f';
+                    end
                     S11re = real(obj.S11);S11im = imag(obj.S11);
-                    dataWrite = table(obj.f'/1e9, S11re', S11im');
+                    dataWrite = table(obj.f/1e9, S11re, S11im);
                     dataWrite.Properties.VariableNames = [headerStr, " ", "  "];
                     writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
                 case 2
-                    dataWrite = table(obj.f'/1e9, real(obj.S11)', imag(obj.S11)', real(obj.S21)',imag(obj.S21)',real(obj.S12)',imag(obj.S12)',real(obj.S22)',imag(obj.S22)');
+                    disp('Writing s2p file...')
+                    dataWrite = table(obj.f/1e9, real(obj.S11), imag(obj.S11), real(obj.S21),imag(obj.S21),real(obj.S12),imag(obj.S12),real(obj.S22),imag(obj.S22));
                     names = headerStr;
                     for i = 1:8
                         names = [names convertCharsToStrings(blanks(i))];
@@ -602,9 +618,10 @@ classdef SPARAMS < handle
                     dataWrite.Properties.VariableNames = names;%[headerStr, " ", "  ", "   ", "    ", "     ", "      ", "       ", "        "];
                     writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
                 case 3
-                    dataWrite = table(obj.f'/1e9, real(obj.S11)', imag(obj.S11)', real(obj.S12)',imag(obj.S12)', real(obj.S13)', imag(obj.S13)',...
-                        real(obj.S21)', imag(obj.S21)', real(obj.S22)',imag(obj.S22)', real(obj.S23)', imag(obj.S23)',...
-                        real(obj.S31)', imag(obj.S31)', real(obj.S32)',imag(obj.S32)', real(obj.S33)', imag(obj.S33)');
+                    disp('Writing s3p file...')
+                    dataWrite = table(obj.f/1e9, real(obj.S11), imag(obj.S11), real(obj.S12), imag(obj.S12), real(obj.S13), imag(obj.S13),...
+                        real(obj.S21), imag(obj.S21), real(obj.S22),imag(obj.S22), real(obj.S23), imag(obj.S23),...
+                        real(obj.S31), imag(obj.S31), real(obj.S32),imag(obj.S32), real(obj.S33), imag(obj.S33));
                     names = headerStr;
                     for i = 1:18
                         names = [names convertCharsToStrings(blanks(i))];
@@ -612,16 +629,20 @@ classdef SPARAMS < handle
                     dataWrite.Properties.VariableNames = names;
                     writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
                 case 4
-                    dataWrite = table(obj.f'/1e9, real(obj.S11)', imag(obj.S11)', real(obj.S12)',imag(obj.S12)', real(obj.S13)', imag(obj.S13)', real(obj.S14)', imag(obj.S14)',...
-                        real(obj.S21)', imag(obj.S21)', real(obj.S22)',imag(obj.S22)', real(obj.S23)', imag(obj.S23)', real(obj.S24)', imag(obj.S24)',...
-                        real(obj.S31)', imag(obj.S31)', real(obj.S32)',imag(obj.S32)', real(obj.S33)', imag(obj.S33)', real(obj.S34)', imag(obj.S34)',...
-                        real(obj.S31)', imag(obj.S31)', real(obj.S32)',imag(obj.S32)', real(obj.S33)', imag(obj.S33)', real(obj.S34)', imag(obj.S34)');
+                    disp('Writing s4p file...')
+                    dataWrite = table(obj.f/1e9, real(obj.S11), imag(obj.S11), real(obj.S12),imag(obj.S12), real(obj.S13), imag(obj.S13), real(obj.S14), imag(obj.S14),...
+                        real(obj.S21), imag(obj.S21), real(obj.S22),imag(obj.S22), real(obj.S23), imag(obj.S23), real(obj.S24), imag(obj.S24),...
+                        real(obj.S31), imag(obj.S31), real(obj.S32),imag(obj.S32), real(obj.S33), imag(obj.S33), real(obj.S34), imag(obj.S34),...
+                        real(obj.S31), imag(obj.S31), real(obj.S32),imag(obj.S32), real(obj.S33), imag(obj.S33), real(obj.S34), imag(obj.S34),...
+                        real(obj.S41), imag(obj.S41), real(obj.S42),imag(obj.S42), real(obj.S43), imag(obj.S43), real(obj.S44), imag(obj.S44));
                     names = headerStr;
                     for i = 1:32
                         names = [names convertCharsToStrings(blanks(i))];
                     end
                     dataWrite.Properties.VariableNames = names;
                     writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
+                otherwise
+                    error('Number of ports must be set with s.setNumPorts(). This function only works with numPorts <= 4.')
             end
 			% dlmwrite(filenameOut, obj.data, ' ');
         end
