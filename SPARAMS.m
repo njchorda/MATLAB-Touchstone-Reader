@@ -125,7 +125,10 @@ classdef SPARAMS < handle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             txt = strtrim(txt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            txt = regexprep(txt, '![\s\S]*?!|([^:]|^)!.*$', '', 'lineanchors', 'dotexceptnewline');
+            % txt = regexprep(txt, '![\s\S]*?!|([^:]|^)!.*$', '', 'lineanchors', 'dotexceptnewline');
+            lines = strsplit(txt, '\n');
+            filteredLines = lines(~startsWith(lines, '!'));
+            txt = strjoin(filteredLines, '\n');
 			txt = regexprep(txt, '\t+', ' '); %Remove all tabs and replace with s single space (dealt with in next line)
             txt = strtrim(txt);	%Remove trailing whitespace
 
