@@ -46,9 +46,7 @@ s2 = s.copyobj();
 
 ```matlab
 s.setFile('filename.s2p')      % Load a new file into an existing object
-s.setZ0(50)                    % Set system impedance manually
-s.setNumPorts(2)               % Set number of ports manually
-s.setFreqUnits('GHz')          % Set frequency axis units for plotting
+s.setFreqUnits('GHz')          % Set frequency axis units for plotting (does not change data)
                                % Options: 'Hz', 'kHz', 'MHz', 'GHz'
 ```
 
@@ -68,14 +66,14 @@ s.plotdB({'S11', 'S21'})               % Plot multiple parameters in dB
 s.plotAlldB()                          % Plot all S-parameters in dB
 s.plotPolar({'S11', 'S21'})            % Polar plot
 s.plotSmith('S11')                     % Smith chart plot
-s.plotDispersion()                     % Dispersion diagram (for unit cells)
+s.plotDispersion()                     % Dispersion diagram (for unit cells, must be a two-port file)
 s.plotDispersion('flip')               % Dispersion with flipped axes
 ```
 
 ### Parameter Conversions
 
 ```matlab
-[Zin1, Zin2] = s.toInputImpedance()           % Input impedance at each port
+[Zin1, Zin2] = s.toInputImpedance()           % Input impedance at each port (assuming other port is terminated in Z0)
 [A, B, C, D] = s.toABCDparams()               % ABCD parameters (all frequencies)
 [A, B, C, D] = s.toABCDparams(freq)           % ABCD parameters at one frequency
 [T11,T12,T21,T22] = s.toTParams()             % T-parameters (all frequencies)
@@ -89,6 +87,8 @@ s.plotDispersion('flip')               % Dispersion with flipped axes
 ```matlab
 s.renorm(Z0new)      % Renormalize to a new reference impedance
                      % (also updates s.Z0 automatically)
+                     % Note: overwrites original S-parameters
+                     % Use copyobj() first to preserve originals
 s.cascade(N)         % Cascade the unit cell N times (2-port only)
                      % Note: overwrites original S-parameters
                      % Use copyobj() first to preserve originals
@@ -129,7 +129,7 @@ S = SPARAMS.z2s(Z, Z0)              % Z-matrix → S-matrix
 [S11,S21,S12,S22] = SPARAMS.abcd2s(A, B, C, D, Z0)  % ABCD → S-parameters
 ```
 
-### Comparing Two Objects
+### Comparing Two Sets of S-parameters
 
 ```matlab
 SPARAMS.plotAnydB(obj1, {'S11','S21'}, obj2, {'S11','S21'});
