@@ -53,7 +53,7 @@ classdef SPARAMS < handle
                 case 1
                     obj.setFile(filename);
                 case 0
-                    warning('No data set. Once data is assigned you will need to call setNumPorts() to set the number of ports.');
+                    % warning('No data set. Once data is assigned you will need to call setNumPorts() to set the number of ports.');
             end
             obj.setFreqUnits('Hz');
         end
@@ -134,6 +134,9 @@ classdef SPARAMS < handle
 
             hashIndex = strfind(txt,key);
             newLineIndex = regexp(txt(hashIndex:end), '[\r]');
+            if isempty(newLineIndex)
+                newLineIndex = regexp(txt(hashIndex:end), '[\n]');
+            end
             newLineIndex = newLineIndex(1);
             obj.form = txt(hashIndex:hashIndex+newLineIndex);
             
@@ -142,14 +145,24 @@ classdef SPARAMS < handle
 			dataTxt = regexprep(dataTxt, '![\s\S]*?!|([^:]|^)!.*$', '', 'lineanchors', 'dotexceptnewline');
 			dataTxt = regexprep(dataTxt, '\t+', ' '); %Remove all tabs and replace with s single space (dealt with in next line
             dataTxt = strtrim(dataTxt);	%Remove trailing whitespace
-            for j = 1:100 %Not a very efficient way of doing it, but I'm getting tired of this shit
-				len = 101 - j;
-				for k = 1:len
-					regStr(k) = ' ';
-				end
-        		dataTxt = regexprep(dataTxt, regStr, ',');
-				clear regStr
+            % for j = 1:100 %Not a very efficient way of doing it, but I'm getting tired of this shit
+			% 	len = 101 - j;
+			% 	for k = 1:len
+				% 	regStr(k) = ' ';
+			% 	end
+        	% 	dataTxt = regexprep(dataTxt, regStr, ',');
+			% 	clear regStr
+            % end
+            %% test regex replacement of tabs and spaces with a comma
+            dataLines = strsplit(dataTxt, '\n');
+            for i = 1:numel(dataLines) 
+                dataLines{i} = regexprep(dataLines{i}, '[\s\t]+', ',');
+                dataLines{i} = regexprep(dataLines{i}, '^,|,$', '');  % Remove leading/trailing commas
+                dataLines{i} = strtrim(dataLines{i});  % Remove leading and trailing spaces
+                dataLines{i} = erase(dataLines{i}, newline);
             end
+            dataTxt = strjoin(dataLines, '\n');
+            %% End test
             obj.rawData = cell2mat(textscan(dataTxt, '', 'delimiter', ',', 'headerlines', 0, 'emptyvalue', nan, 'collectoutput', 1));
 			obj.formatMatrix();
             obj.f = obj.data(:, 1);
@@ -396,9 +409,7 @@ classdef SPARAMS < handle
         end
         
         function plotSmith(obj, splt)
-            %Plots any speciified S-parameter(s) in polar format
-            %Say you wish to plot only S11 and S21
-            %s.plotPolar({'S11' 'S21'})
+            %Plots any speciified S-parameter(s) on a drawn Smith Chart
             
             % Draw Smith chart axes
             % Draw outer circle
@@ -504,6 +515,9 @@ classdef SPARAMS < handle
             %s.renorm(newZ0);
             %http://qucs.sourceforge.net/tech/node98.html
             %NOT FINISHED FOR 3 OR 4 PORTS
+            if obj.numPorts > 2
+                error('Cannot renormalize for more than 2 ports.');
+            end
             Z0old = obj.Z0;
             for i = 1:length(obj.f)
 				S = obj.toMat(obj.f(i));
@@ -700,6 +714,25 @@ classdef SPARAMS < handle
     end
 
     methods(Static)
+
+        % function [S11, S12, S21, S22] = cascadeDifferent(S1, S2)
+        %     %Calculates S parameters of two SPARAMS objects. Only valid for
+        %     %2 port unit cells.
+        %         [A1, B1, C1, D1] = S1.toABCDparams;
+        %         [A2, B2, C2, D2] = S2.toABCDparams;
+        %         for i = 1:numel(S1.f)
+        %             ABCDtemp = [A1(i) B1(i);C1(i) D1(i)]*[A2(i) B2(i);C2(i) D2(i)];
+        %             At(i) = ABCDtemp(1, 1);Bt(i) = ABCDtemp(1, 2);Ct(i) = ABCDtemp(2, 1);Dt(i) = ABCDtemp(2, 2);
+        %         end
+        %         % S11 = (At + Bt/S1.Z0 - Ct.*S1.Z0 - Dt)./(At + Bt/S1.Z0 + Ct.*S1.Z0 + Dt);
+        %         % S12 = (2.*(At.*Dt - Bt.*Ct))./(At + Bt/S1.Z0 + Ct.*S1.Z0 + Dt);
+        %         % S21 = 2./(At + Bt/S1.Z0 + Ct.*S1.Z0 + Dt);
+        %         % S22 = (-At + Bt./S1.Z0 - Ct.*S1.Z0 + Dt)./(At + Bt/S1.Z0 + Ct.*S1.Z0 + Dt);
+        % 
+        %         [S11, S12, S21, S22] = SPARAMS.abcd2s(At, Bt, Ct, Dt, S1.Z0);
+        %         S11 = S11';S12 = S12';S21 = S21';S22 = S22';
+        % 
+        % end
         
         function sDUT = deembed(err1, sALL, err2)
             %Deembed S-parameters under the following conditions
