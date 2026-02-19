@@ -1,6 +1,6 @@
 # SPARAMS — MATLAB S-Parameter Toolbox
 
-A MATLAB class for reading, manipulating, converting, and plotting S-parameter data from Touchstone files (`.s1p`, `.s2p`, `.s3p`, `.s4p`). Supports up to 4-port measurements in **RI**, **MA**, and **dB/Angle** formats.
+A not-particularly-efficient MATLAB class for reading, manipulating, converting, and plotting S-parameter data from Touchstone files (`.s1p`, `.s2p`, `.s3p`, `.s4p`). Supports up to 4-port measurements in **RI**, **MA**, and **dB/Angle** formats.
 
 ---
 
