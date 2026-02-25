@@ -32,7 +32,7 @@ classdef SPARAMS < handle
     % DUT = SPARAMS.deembed(err1, measured, err2)
     %Write data to new touchstone file
     % s.writeSNP(filename)
-    % File format is already taken care of, but s.serNumPorts() must be
+    % File format is already taken care of, but s.setNumPorts() must be
     % called first to know which file type to write (s1p, s2p, s3p, s4p)
 
     properties
