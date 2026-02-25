@@ -795,28 +795,28 @@ classdef SPARAMS < handle
             ylabel('S-parameters (dB)');
         end
 
-		function Z = s2z(S, Z0)
-            %General conversion from S to Z
-			fS11 = S(1, 1); fS12 = S(1, 2); fS21 = S(2, 1); fS22 = S(2, 2);
-			Z11 = Z0*((1 + fS11).*(1 - fS22) + fS12.*fS21)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
-			Z12 = Z0*(2.*fS12)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
-			Z21 = Z0*(2*fS21)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
-			Z22 = Z0*((1 - fS11).*(1 + fS22) + fS12.*fS21)./((1 - fS11).*(1 - fS22) - fS12.*fS21);
-			Z = [Z11 Z12;Z21 Z22];
+		function [Z11, Z12, Z21, Z22] = s2z(S11, S12, S21, S22, Z0)
+            %General conversion from S to Z. Input and output (except Z0) as
+            % vectors.
+			Z11 = Z0*((1 + S11).*(1 - S22) + S12.*S21)./((1 - S11).*(1 - S22) - S12.*S21);
+			Z12 = Z0*(2.*S12)./((1 - S11).*(1 - S22) - S12.*S21);
+			Z21 = Z0*(2*S21)./((1 - S11).*(1 - S22) - S12.*S21);
+			Z22 = Z0*((1 - S11).*(1 + S22) + S12.*S21)./((1 - S11).*(1 - S22) - S12.*S21);
 		end
 
-		function S = z2s(Z, Z0)
-            %General conversion from Z to S
-			Z11 = Z(1, 1); Z12 = Z(1, 2); Z21 = Z(2, 1); Z22 = Z(2, 2);
+		function [S11, S12, S21, S22] = z2s(Z11, Z12, Z21, Z22, Z0)
+            %General conversion from Z to S. Input and output (except Z0) as
+            % vectors.
 			dZ = (Z11 + Z0).*(Z22 + Z0) - Z12.*Z21;
 			S11 = ((Z11 - Z0).*(Z22 + Z0) - Z12.*Z21)/dZ;
 			S12 = 2*Z12.*Z0./dZ;
 			S21 = 2*Z21.*Z0./dZ;
 			S22 = ((Z11 + Z0).*(Z22 - Z0) - Z12.*Z21)/dZ;s
-			S = [S11 S12;S21 S22];
         end
         
         function [A, B, C, D] = s2abcd(S11, S12, S21, S22, Z0)
+            % General S to ABCD conversion. Input and output (except Z0) as
+            % vectors.
 			A = ((1 + S11).*(1 - S22) + S12.*S21)./(2.*S21);
 			B = Z0*((1 + S11).*(1 + S22) - S12.*S21)./(2.*S21);
 			C = (1/Z0)*((1 - S11).*(1 - S22) - S12.*S21)./(2*S21);
