@@ -470,7 +470,17 @@ classdef SPARAMS < handle
             %[Zin1, Zin2] = s.toInputImpedance();
 			Zin1 = obj.Z0.*(1 + obj.S11)./(1 - obj.S11);
 			Zin2 = obj.Z0.*(1 + obj.S22)./(1 - obj.S22);
-		end
+        end
+
+        function ZB = toBlochImpedance(obj)
+            % Calculates the Bloch impedance of a two-port object
+            if obj.numPorts ~= 2
+                error('Object must be a two-port structure to calculate Bloch impedance.')
+            end
+            [A, B, ~, D] = obj.toABCDparams();
+            % ZB = B./sqrt(A.^2 - 1); % Symmetric form
+            ZB = -2.*B./(A-D-sqrt((A + D).^2 - 4)); % General form
+        end
 
 		function [A, B, C, D] = toABCDparams(obj, freq)
             %Calculates the ABCD parameters from S-parameters
