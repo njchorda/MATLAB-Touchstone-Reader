@@ -80,6 +80,7 @@ s.plotDispersion('flip')               % Dispersion with flipped axes
 [T11,T12,T21,T22] = s.toTParams(freq)         % T-parameters at one frequency
 [Z11,Z12,Z21,Z22] = s.toZparams()             % Z-parameters
 [Y11,Y12,Y21,Y22] = s.toYparams()             % Y-parameters
+ZB = s.toBlochImpedance()                     % Bloch impedance of a two-port structure
 ```
 
 ### Manipulation
