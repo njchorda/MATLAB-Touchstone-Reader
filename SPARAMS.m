@@ -226,11 +226,14 @@ classdef SPARAMS < handle
             %Make S parameter in RI no matter orignal format
             switch obj.form
                 case "MA"
-                    S = c1.*exp(j*deg2rad(c2));
+                    S = c1.*exp(1i*deg2rad(c2));
+                    S = S(:)'; % Typecast to a row vector
                 case "RI"
-                    S = c1 + j*c2;
+                    S = c1 + 1i*c2;
+                    S = S(:)';
                 case "dB"
-                    S = 10.^(c1/20).*exp(j*deg2rad(c2));
+                    S = 10.^(c1/20).*exp(1i*deg2rad(c2));
+                    S = S(:)';
             end
         end
 
