@@ -173,6 +173,7 @@ classdef SPARAMS < handle
             elseif contains(obj.form, 'kHz', 'IgnoreCase', true)
                 obj.f = obj.f.*1e3;
             end
+            obj.f = obj.f(:)'; % Make a row vector
             obj.sparams = obj.data(:, 2:end);
         end
 
