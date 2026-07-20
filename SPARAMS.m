@@ -824,7 +824,7 @@ classdef SPARAMS < handle
 			S11 = ((Z11 - Z0).*(Z22 + Z0) - Z12.*Z21)/dZ;
 			S12 = 2*Z12.*Z0./dZ;
 			S21 = 2*Z21.*Z0./dZ;
-			S22 = ((Z11 + Z0).*(Z22 - Z0) - Z12.*Z21)/dZ;s
+			S22 = ((Z11 + Z0).*(Z22 - Z0) - Z12.*Z21)/dZ;
         end
         
         function [A, B, C, D] = s2abcd(S11, S12, S21, S22, Z0)
