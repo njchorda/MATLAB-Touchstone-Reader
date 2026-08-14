@@ -638,7 +638,7 @@ classdef SPARAMS < handle
                     S11re = real(obj.S11);S11im = imag(obj.S11);
                     dataWrite = table(obj.f/1e9, S11re, S11im);
                     dataWrite.Properties.VariableNames = [headerStr, " ", "  "];
-                    writetable(dataWrite, [filenameOut fileExt], 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
+                    writetable(dataWrite, strcat(filenameOut, fileExt), 'FileType','text', 'Delimiter', '\t', 'WriteVariableNames',true)
                 case 2
                     disp('Writing s2p file...')
                     dataWrite = table(obj.f/1e9, real(obj.S11), imag(obj.S11), real(obj.S21),imag(obj.S21),real(obj.S12),imag(obj.S12),real(obj.S22),imag(obj.S22));
