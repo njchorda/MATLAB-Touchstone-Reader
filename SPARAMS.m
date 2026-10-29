@@ -228,13 +228,13 @@ classdef SPARAMS < handle
             switch obj.form
                 case "MA"
                     S = c1.*exp(1i*deg2rad(c2));
-                    S = S(:)'; % Typecast to a row vector
+                    S = S(:).'; % Typecast to a row vector (non-conjugate transpose)
                 case "RI"
                     S = c1 + 1i*c2;
-                    S = S(:)';
+                    S = S(:).';
                 case "dB"
                     S = 10.^(c1/20).*exp(1i*deg2rad(c2));
-                    S = S(:)';
+                    S = S(:).';
             end
         end
 
@@ -551,7 +551,7 @@ classdef SPARAMS < handle
 				case 1
 					obj.S11 = S11n;
 				case 2
-					obj.S11 = S11n'; obj.S12 = S12n'; obj.S21 = S21n'; obj.S22 = S22n'; 
+					obj.S11 = S11n; obj.S12 = S12n; obj.S21 = S21n; obj.S22 = S22n; % keep row vectors, no conjugation
             end
             obj.setZ0(Z0new);
 		end
@@ -620,7 +620,7 @@ classdef SPARAMS < handle
             for p = properties(obj).'
                 try % Convert all vectors to column vectors if not already
                    if numel(obj.(p{1})) > 1 & isrow(obj.(p{1}))
-                       obj.(p{1}) = obj.(p{1})';
+                       obj.(p{1}) = obj.(p{1}).';
                    end
                 catch
                     warning('Failed to transpose property: %s', p);
@@ -632,8 +632,8 @@ classdef SPARAMS < handle
                 case 1
                     disp('Writing s1p file...')
                     if isrow(obj.S11)
-                        obj.S11 = obj.S11';
-                        obj.f = obj.f';
+                        obj.S11 = obj.S11.';
+                        obj.f = obj.f.';
                     end
                     S11re = real(obj.S11);S11im = imag(obj.S11);
                     dataWrite = table(obj.f/1e9, S11re, S11im);
